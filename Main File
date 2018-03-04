@@ -1,0 +1,165 @@
+  import pygame
+  import random
+   
+  pygame.init()
+   
+   all_sprites = pygame.sprite.Group()
+   BLACK = (0, 0, 0)
+   display_width = 800
+   display_height = 600
+  
+  gameDisplay = pygame.display.set_mode((display_width, display_height))
+  pygame.display.set_caption('Kyudo')
+  clock = pygame.time.Clock()
+  
+  background = pygame.image.load("background.jpg").convert()
+  background = pygame.transform.scale(background,(display_width, display_height))
+  screen = pygame.image.load("start.jpg").convert()
+  screen = pygame.transform.scale(screen,(display_width, display_height))
+  
+  font_name = pygame.font.match_font('arial')
+ 
+  def draw_text(surf, text, size,x,y):
+      font = pygame.font.Font(font_name, size)
+      text_surface = font.render(text,True,BLACK)
+      text_rect = text_surface.get_rect()
+      text_rect.midtop = (x, y)
+      surf.blit(text_surface, text_rect)
+  
+  class BowArrow(pygame.sprite.Sprite):
+      def __init__(self):
+          pygame.sprite.Sprite.__init__(self)
+          self.image = pygame.image.load("bow7.png")
+          self.rect = self.image.get_rect()
+          self.rect.centery = display_height / 2
+          self.rect.left = 10
+          self.speedy  = 0
+  
+      def update(self):
+          self.speedx = 0
+          keystate = pygame.key.get_pressed()
+          if keystate[pygame.K_UP]:
+              self.speedy = -50
+              self.rect.y += self.speedy
+          if keystate[pygame.K_DOWN]:
+              self.speedy = 50
+              self.rect.y += self.speedy
+          if self.rect.bottom > display_height:
+              self.rect.bottom = display_height
+          if self.rect.top < 0:
+              self.rect.top = 0
+ 
+      def shoot(self):
+          arrow = Arrow(self.rect.centery,self.rect.left)
+          all_sprites.add(arrow)
+          arrows.add(arrow)
+  
+  class Lantern(pygame.sprite.Sprite):
+      def __init__(self):
+          pygame.sprite.Sprite.__init__(self)
+          self.image = pygame.image.load("oie_transparent.png")
+          self.image = pygame.transform.scale(self.image,(40,40))
+          self.rect = self.image.get_rect()
+          self.rect.x = random.randrange(display_height / 2 , display_height)
+          self.rect.y = random.randrange(-100, -40)
+          self.speedy = random.randrange(1, 80)
+  
+      def update(self):
+          self.rect.y += self.speedy
+          if self.rect.top > display_height :
+              self.rect.x = random.randrange(display_height / 2, display_height)
+              self.rect.y = random.randrange(-100,-40)
+              self.speedy = random.randrange(1,80)
+  
+  class Arrow(pygame.sprite.Sprite):
+      def __init__(self, x, y):
+          pygame.sprite.Sprite.__init__(self)
+          self.image = pygame.image.load("arrow.png")
+          self.image = pygame.transform.scale(self.image,(60,10))
+          self.rect = self.image.get_rect()
+          self.rect.left = y
+          self.rect.centery = x
+          self.speedx = 50
+  
+      def update(self):
+          self.rect.x += self.speedx
+          if self.rect.right > display_width:
+              self.kill()
+  
+  all_sprites = pygame.sprite.Group()
+  lantern = pygame.sprite.Group()
+  arrows = pygame.sprite.Group()
+  bowarrow = BowArrow()
+  all_sprites.add(bowarrow)
+  
+  
+ for i in range(10):
+      m = Lantern()
+     all_sprites.add(m)
+      lantern.add(m)
+ 
+ 
+ def start_screen():
+     gameDisplay.blit(screen,(0,0))
+     draw_text(gameDisplay,"KYUDO",70,520,50)
+     draw_text(gameDisplay, "press any key to START the game",30,545,150)
+     pygame.display.flip()
+     waiting = True
+     while waiting:
+         clock.tick(1)
+         for event in pygame.event.get():
+             if event.type == pygame.KEYUP:
+                 waiting = False
+ 
+ def game_over(score):
+     draw_text(gameDisplay,"GAME OVER ",70,400,300)
+     draw_text(gameDisplay,"SCORE :",50,300,400)
+     draw_text(gameDisplay,str(score),50,425,400)
+     pygame.display.update()
+     waiting = True
+     while waiting:
+         clock.tick(1)
+         for event in pygame.event.get():
+             if event.type == pygame.KEYUP:
+                 game_loop()
+                 waiting = False
+ 
+ def game_loop():
+     burst = False
+     start = True
+     score = 0
+     lives = 16
+     while not burst :
+         if start:
+             start_screen()
+             start = False
+         for event in pygame.event.get():
+             if event.type == pygame.QUIT:
+                 burst = True
+             elif event.type == pygame.KEYDOWN:
+                 if event.key == pygame.K_SPACE:
+                     lives -= 1
+                     bowarrow.shoot()
+                     if lives == 0:
+                         game_over(score)
+                         burst = True
+
+             gameDisplay.blit(background,(0,0))
+             all_sprites.update()
+             hits = pygame.sprite.groupcollide(arrows,lantern,True,True )
+             for hit in hits:
+                 score += 1
+                 m = Lantern()
+                 all_sprites.add(m)
+                 lantern.add(m)
+             all_sprites.draw(gameDisplay)
+             draw_text(gameDisplay,"SCORE :",20,730,20)
+             draw_text(gameDisplay, str(score), 20, 780,20)
+             draw_text(gameDisplay,"ARROWS :",20,720,50)
+             draw_text(gameDisplay,str(lives) , 20, 780 ,50)
+             pygame.display.update()
+             clock.tick(5)
+
+ game_loop()
+pygame.quit()
+ quit()
